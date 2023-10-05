@@ -50,11 +50,14 @@ def main():
     df_lookup = make_id_lookup(df, df_col_pos["pid"])
     ids = list(df_lookup.keys())
 
+    valid_hpo = _.to_dataframe().index.tolist()
+
     rows = []
     for id in ids:
         if id != "pid":
             raw = df[df_lookup[id]][df_col_pos["codes"]].split(";")
-            s = BasicHPOSet.from_queries(raw)
+            real = [x for x in raw if x in valid_hpo]
+            s = BasicHPOSet.from_queries(real)
 
             term_cnt = len(s.toJSON())
 
@@ -63,11 +66,11 @@ def main():
 
             gene_model = EnrichmentModel("gene")
             genes = gene_model.enrichment(method="hypergeom", hposet=s)
-            top10_genes = [x["item"] for x in genes[:10]]
+            top10_genes = [x["item"] for x in genes[:20]]
 
             omim_model = EnrichmentModel("omim")
             omims = omim_model.enrichment(method="hypergeom", hposet=s)
-            top10_omims = [x["item"] for x in omims[:10]]
+            top10_omims = [x["item"] for x in omims[:20]]
 
             info_con = s.information_content(kind="omim")
             #variance = s.variance()
