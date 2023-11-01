@@ -553,9 +553,10 @@ def rocy(preds, outcome):
     Returns:
         bool: True if the ROC AUC is successfully computed.
     """
-    fpr, tpr, thresholds = metrics.roc_curve(outcome.astype("int8")[:, np.newaxis], preds[:,1], pos_label=1)
-    roc_auc = metrics.auc(fpr, tpr)
-    print(roc_auc, file=sys.stderr)
+    # fpr, tpr, thresholds = metrics.roc_curve(outcome.astype("int8")[:, np.newaxis], preds[:,1], pos_label=1)
+    # roc_auc_score = metrics.auc(fpr, tpr)
+    roc_auc_score = metrics.roc_auc_score(outcome[:, np.newaxis], preds[:,1])
+    print(roc_auc_score, file=sys.stderr)
     return True
 
 
@@ -720,13 +721,14 @@ def main():
         train_y = np.array([x[train_col_idx["seq_status"]] for x in train[1:]])
 
         train_scores, train_preds = training(train_X, train_y)
-        #rocy(train_preds, train_y)
+        # rocy(train_preds, train_y)
         train_out = [x+y for x,y in zip(train, [preds_header] + train_preds.tolist())] 
 
         writey(train_out, path.join(args.outdir, 
             "training_preds_ba{0}_sf{1}.tsv".format(args.alpha, args.sample_features)))
 
         fit = BernoulliNB().fit(train_X, train_y)
+        # print(metrics.roc_auc_score(train_y, fit.predict_proba(train_X)[:,1]))
 
         if args.Pickle:
             dump(fit, path.join(args.outdir, "trained_model.pickle"))

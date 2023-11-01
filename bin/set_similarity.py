@@ -94,9 +94,6 @@ def main():
 
     valid_hpo = _.to_dataframe().index.tolist()
 
-    jaccard = []
-    jaccard_with_parents = []
-    similarity = []
     rows = []
     for id in ids:
         if id != "pid":
@@ -156,9 +153,6 @@ def main():
             rand_sim = rand_set1.similarity(rand_set2)
 
             rows.append([id, len1, len2, round(jac, 3), round(rand_jac, 3), round(jac_p, 3), round(rand_jac_p, 3), round(sim, 3), round(rand_sim, 3)])
-            #jaccard.append(jac)
-            #jaccard_with_parents.append(jac_p)
-            #similarity.append(sim)
 
 
     print(f"# set 1 -- {args.datasets[0]}")
@@ -168,10 +162,6 @@ def main():
     print("\t".join(header))
     for x in rows:
         print("\t".join([str(y) for y in x]))
-    # print()
-    # print(f"# jaccard index: {sum(jaccard) / len(jaccard)}")
-    # print(f"# jaccard index (+parents): {sum(jaccard_with_parents) / len(jaccard_with_parents)}")
-    # print(f"# semantic similarity score: {sum(similarity) / len(similarity)}")
 
 
 

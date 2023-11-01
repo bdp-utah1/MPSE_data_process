@@ -5,7 +5,7 @@ import sys
 import csv
 import argparse
 from pyhpo.ontology import Ontology
-from pyhpo.set import BasicHPOSet
+from pyhpo.set import HPOSet, BasicHPOSet
 from pyhpo.stats import EnrichmentModel
 
 
@@ -57,6 +57,7 @@ def main():
         if id != "pid":
             raw = df[df_lookup[id]][df_col_pos["codes"]].split(";")
             real = [x for x in raw if x in valid_hpo]
+            # s = HPOSet.from_queries(real)
             s = BasicHPOSet.from_queries(real)
 
             term_cnt = len(s.toJSON())
