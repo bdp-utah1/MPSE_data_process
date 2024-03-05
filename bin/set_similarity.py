@@ -126,11 +126,19 @@ def main():
                 set2_p.update(find_parents_recursive(term, visited2))
 
 
-            rand_samp1 = get_random_hpo_sample(len1, valid_hpo)
-            rand_samp2 = get_random_hpo_sample(len2, valid_hpo)
+            if df1_name == "NeoSeq_physician_HPO.tsv":
+                rand_samp1 = lst1
+                rand_set1 = set1
+            else:
+                rand_samp1 = get_random_hpo_sample(len1, valid_hpo)
+                rand_set1 = BasicHPOSet.from_queries(rand_samp1)
 
-            rand_set1 = BasicHPOSet.from_queries(rand_samp1)
-            rand_set2 = BasicHPOSet.from_queries(rand_samp2)
+            if df2_name == "NeoSeq_physician_HPO.tsv":
+                rand_samp2 = lst2
+                rand_set2 = set2
+            else:
+                rand_samp2 = get_random_hpo_sample(len2, valid_hpo)
+                rand_set2 = BasicHPOSet.from_queries(rand_samp2)
 
             rand_samp1_p = set()
             rand_visited1 = set()

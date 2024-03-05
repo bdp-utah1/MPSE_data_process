@@ -4,9 +4,11 @@ import os
 import sys
 import csv
 import argparse
+
 from pyhpo.ontology import Ontology
 from pyhpo.set import HPOSet, BasicHPOSet
 from pyhpo.stats import EnrichmentModel
+import simple_icd_10_cm as cm
 
 
 def argue():
@@ -55,38 +57,55 @@ def main():
     rows = []
     for id in ids:
         if id != "pid":
-            raw = df[df_lookup[id]][df_col_pos["codes"]].split(";")
-            real = [x for x in raw if x in valid_hpo]
-            # s = HPOSet.from_queries(real)
-            s = BasicHPOSet.from_queries(real)
+            codes = df[df_lookup[id]][df_col_pos["codes"]].split(";")
+            hpo = []
+            icd = []
+            other = []
 
-            term_cnt = len(s.toJSON())
+            for cde in codes:
+                if cde in valid_hpo:
+                    hpo.append(cde)
+                elif cm.is_valid_item(cde):
+                    icd.append(cm.add_dot(cde))
+                else:
+                    other.append(cde)
 
-            #omim_dis = s.omim_diseases()
-            #omim_str = [str(x.toJSON()["id"]) for x in omim_dis]
+            all_hpo_cnt = len(set(hpo))
+            icd_cnt = len(set(icd))
+            other_cnt = len(set(other))
+            total_cnt = len(set(codes))
 
-            gene_model = EnrichmentModel("gene")
-            genes = gene_model.enrichment(method="hypergeom", hposet=s)
-            top10_genes = [x["item"] for x in genes[:20]]
+            if all_hpo_cnt == 0:
+                rows.append((id, 0, 0, icd_cnt, other_cnt, total_cnt, 0, 0, None, None))
+            else:
+                s = BasicHPOSet.from_queries(hpo)
 
-            omim_model = EnrichmentModel("omim")
-            omims = omim_model.enrichment(method="hypergeom", hposet=s)
-            top10_omims = [x["item"] for x in omims[:20]]
+                terminal_hpo_cnt = len(s.toJSON())
 
-            info_con = s.information_content(kind="omim")
-            #variance = s.variance()
+                gene_model = EnrichmentModel("gene")
+                genes = gene_model.enrichment(method="hypergeom", hposet=s)
+                top10_genes = [x["item"] for x in genes[:20]]
 
-            rows.append((id, 
-                         term_cnt, 
-                         round(info_con["mean"], 3),
-                         round(info_con["total"], 3),
-                         # variance, 
-                         # ";".join(omim_str),
-                         ";".join([str(x.toJSON()["id"]) for x in top10_genes]),
-                         ";".join([str(x.toJSON()["id"]) for x in top10_omims])
-                         ))
+                omim_model = EnrichmentModel("omim")
+                omims = omim_model.enrichment(method="hypergeom", hposet=s)
+                top10_omims = [x["item"] for x in omims[:20]]
 
-    header = ["pid","term_count","mean_info_cont","total_info_cont","top10genes","top10omims"]
+                info_con = s.information_content(kind="omim")
+
+                rows.append((id, 
+                             all_hpo_cnt, 
+                             terminal_hpo_cnt,
+                             icd_cnt,
+                             other_cnt,
+                             total_cnt,
+                             round(info_con["mean"], 3),
+                             round(info_con["total"], 3),
+                             ";".join([str(x.toJSON()["id"]) for x in top10_genes]),
+                             ";".join([str(x.toJSON()["id"]) for x in top10_omims])
+                             ))
+
+    header = ["pid","all_hpo_cnt","terminal_hpo_cnt","icd_cnt","other_cnt","total_cnt",
+              "mean_info_cont","total_info_cont","top10genes","top10omims"]
     print("\t".join(header))
     for x in rows:
         print("\t".join([str(y) for y in x]))
